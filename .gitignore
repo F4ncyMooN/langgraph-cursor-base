@@ -1,0 +1,73 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+**/*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.egg-info/
+.eggs/
+dist/
+build/
+.env
+.env.*
+.venv/
+venv/
+*.sqlite3
+*.db
+*.log
+
+# Node
+node_modules/
+yarn.lock
+npm-debug.log*
+package-lock.json
+dist/
+build/
+coverage/
+
+# IDE
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# System
+Thumbs.db
+Desktop.ini
+
+# Others
+*.bak
+*.swp
+*.tmp
+*.orig
+
+# Test/coverage
+htmlcov/
+.tox/
+.coverage
+.cache
+.pytest_cache/
+
+# Local config
+*.local
+*.private
+*.secret
+
+# Misc
+*.log
+*.pid
+
+# Ignore mental/老目录
+mental/
+
+dependency/postgresql-17.4/data
+frontend/.yarn
+**/nohup.out
