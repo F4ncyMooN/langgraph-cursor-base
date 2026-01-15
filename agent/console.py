@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, ToolMessage, AIMessage
 
 
 class ConsoleInterface:
@@ -65,6 +65,9 @@ class ConsoleInterface:
                     # 显示 agent 响应
                     if new_messages:
                         last_message = new_messages[-1]
+                        last2message = None if len(new_messages) < 2 else new_messages[-2]
+                        if last2message and isinstance(last2message, ToolMessage):
+                            print(f"\nTool call: {last2message.to_json()} {last2message.content}")
                         print(f"\nAgent: {last_message.content}")
 
             except KeyboardInterrupt:

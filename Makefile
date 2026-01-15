@@ -1,4 +1,4 @@
-.PHONY: help install dev test lint format clean run setup
+.PHONY: help install dev test lint format clean run setup mcp-server mcp-test
 
 help: ## 显示帮助信息
 	@echo "LangGraph Agent Base - 可用命令:"
@@ -16,6 +16,15 @@ dev: ## 启动开发模式（运行 agent console）
 
 run: ## 运行 agent console
 	uv run python main.py
+
+mcp-server: ## 启动 MCP server
+	uv run python -m agent.mcp.server
+
+mcp-test: ## 测试 MCP server
+	uv run python -m agent.mcp.test
+
+mcp-integration-test: ## 测试 MCP server 与 graph 的集成
+	uv run python test_mcp_integration.py
 
 test: ## 运行测试
 	uv run pytest

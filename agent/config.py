@@ -11,7 +11,7 @@ load_dotenv()
 
 def get_deepseek_api_key() -> Optional[str]:
     """Get DeepSeek API key from environment variable."""
-    return os.getenv("DEEPSEEK_API_KEY", "sk-a4b393a1759b4a318bc56c65a87aea4c")
+    return os.getenv("DEEPSEEK_API_KEY")
 
 
 def get_deepseek_base_url() -> str:
