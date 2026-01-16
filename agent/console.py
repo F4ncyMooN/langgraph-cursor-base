@@ -8,6 +8,7 @@ from agent.config import (
     get_langfuse_secret_key,
     get_langfuse_host,
 )
+from langfuse.langchain import CallbackHandler
 
 # Langfuse 集成
 try:
@@ -48,7 +49,8 @@ class ConsoleInterface:
         print("输入 'clear' 清空对话历史")
         print("-" * 60)
 
-        config = {"configurable": {"thread_id": "1"}}
+        config = {"configurable": {"thread_id": "1"},
+                  "callbacks": [CallbackHandler()]}
         # 维护消息历史
         messages = []
 
