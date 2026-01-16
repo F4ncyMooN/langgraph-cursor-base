@@ -5,6 +5,9 @@ from agent.config import (
     get_deepseek_api_key,
     get_deepseek_base_url,
     get_deepseek_model,
+    get_langfuse_public_key,
+    get_langfuse_secret_key,
+    get_langfuse_host,
 )
 from typing import Annotated, TypedDict
 
@@ -16,6 +19,14 @@ import logging
 import sys
 from pathlib import Path
 from langgraph.graph.message import add_messages
+
+# Langfuse 集成
+try:
+    from langfuse import Langfuse
+    LANGFUSE_AVAILABLE = True
+except ImportError:
+    LANGFUSE_AVAILABLE = False
+    Langfuse = None
 
 # 配置 logger 写入 agent.log 文件
 logger = logging.getLogger(__name__)
@@ -38,6 +49,28 @@ if not logger.handlers:
 
     # 防止日志传播到根 logger（避免重复输出）
     logger.propagate = False
+
+
+# 初始化 Langfuse 客户端
+_langfuse_client: Langfuse | None = None
+
+
+def get_langfuse_client() -> Langfuse | None:
+    """获取 Langfuse 客户端实例."""
+    global _langfuse_client
+    if _langfuse_client is None:
+        public_key = get_langfuse_public_key()
+        secret_key = get_langfuse_secret_key()
+        if public_key and secret_key:
+            _langfuse_client = Langfuse(
+                public_key=public_key,
+                secret_key=secret_key,
+                host=get_langfuse_host(),
+            )
+            logger.info("Langfuse 客户端初始化成功")
+        else:
+            logger.warning("Langfuse 配置未设置，将不使用 tracing 功能")
+    return _langfuse_client
 
 
 class AgentState(TypedDict):
@@ -80,8 +113,49 @@ def create_agent_graph():
 
     def call_model(state: AgentState) -> AgentState:
         """Call DeepSeek LLM with conversation history."""
-        # 调用 LLM，传入所有消息历史
-        response = llm_with_tools.invoke(state["messages"])
+        langfuse = get_langfuse_client()
+
+        # 使用 Langfuse 包装 LLM 调用
+        if langfuse and LANGFUSE_AVAILABLE:
+            # 准备输入消息
+            input_messages = []
+            for msg in state["messages"]:
+                if hasattr(msg, "content"):
+                    input_messages.append(msg.content)
+                else:
+                    input_messages.append(str(msg))
+
+            # 使用 context manager 创建 generation span，自动嵌套到当前 trace
+            with langfuse.start_as_current_observation(
+                as_type="generation",
+                name="llm_call",
+                model=get_deepseek_model(),
+                input={"messages": input_messages},
+            ) as generation:
+                try:
+                    # 调用 LLM
+                    response = llm_with_tools.invoke(state["messages"])
+
+                    # 更新 generation 的输出
+                    output_content = response.content if hasattr(response, "content") else str(response)
+                    generation.update(output={"content": output_content})
+
+                    # 如果有 token 使用信息，可以添加
+                    if hasattr(response, "response_metadata"):
+                        metadata = response.response_metadata
+                        if "token_usage" in metadata:
+                            generation.update(usage=metadata["token_usage"])
+                except Exception as e:
+                    # 记录错误
+                    generation.update(
+                        output={"error": str(e)},
+                        level="ERROR",
+                    )
+                    raise
+        else:
+            # 没有 Langfuse 时，直接调用
+            response = llm_with_tools.invoke(state["messages"])
+
         # 返回新消息（LangGraph 会自动追加到现有消息列表）
         return {"messages": [response]}
 

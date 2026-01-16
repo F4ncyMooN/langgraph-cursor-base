@@ -22,3 +22,18 @@ def get_deepseek_base_url() -> str:
 def get_deepseek_model() -> str:
     """Get DeepSeek model name."""
     return os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
+
+
+def get_langfuse_public_key() -> Optional[str]:
+    """Get Langfuse public key from environment variable."""
+    return os.getenv("LANGFUSE_PUBLIC_KEY")
+
+
+def get_langfuse_secret_key() -> Optional[str]:
+    """Get Langfuse secret key from environment variable."""
+    return os.getenv("LANGFUSE_SECRET_KEY")
+
+
+def get_langfuse_host() -> str:
+    """Get Langfuse host URL."""
+    return os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com")
